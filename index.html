@@ -3,104 +3,74 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Network Operations Center - Live Monitoring</title>
+    <title>Network Performance Data for Mosaic</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
-    <script src="https://cdn.plot.ly/plotly-latest.min.js"></script>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.1/font/bootstrap-icons.css">
     <style>
-        .status-healthy { color: #198754; }
-        .status-warning { color: #ffc107; }
-        .status-critical { color: #dc3545; }
-        .card { margin-bottom: 20px; }
-        .small-chart { height: 100px; }
-        .metric-value { font-size: 24px; font-weight: bold; }
-        .metric-label { font-size: 14px; color: #6c757d; }
-        .metric-trend { font-size: 12px; margin-left: 5px; }
-        .trend-up { color: #dc3545; }
-        .trend-down { color: #198754; }
-        .status-indicator {
-            display: inline-block;
-            width: 12px;
-            height: 12px;
-            border-radius: 50%;
-            margin-right: 8px;
-        }
-        .status-green { background-color: #28a745; }
-        .status-yellow { background-color: #ffc107; }
-        .status-red { background-color: #dc3545; }
-        #refresh-countdown {
-            font-size: 12px;
-            color: #6c757d;
-        }
-        .maintenance-item {
-            padding: 10px 15px;
-            border-left: 4px solid transparent;
-        }
-        .maintenance-warning {
-            border-left-color: #ffc107;
-            background-color: rgba(255, 193, 7, 0.1);
-        }
-        .maintenance-critical {
-            border-left-color: #dc3545;
-            background-color: rgba(220, 53, 69, 0.1);
-        }
+        .status-healthy { background-color: rgba(25, 135, 84, 0.1); }
+        .status-warning { background-color: rgba(255, 193, 7, 0.1); }
+        .status-critical { background-color: rgba(220, 53, 69, 0.1); }
+        #refresh-countdown { font-size: 12px; color: #6c757d; }
     </style>
 </head>
 <body>
     <nav class="navbar navbar-dark bg-dark">
         <div class="container-fluid">
-            <a class="navbar-brand" href="#">
-                <i class="bi bi-broadcast-pin"></i> 
-                Network Operations Center
-            </a>
+            <span class="navbar-brand mb-0 h1">Network Monitoring Data</span>
             <span class="navbar-text text-light">
                 <span id="current-time"></span>
                 <span id="refresh-countdown" class="ms-3"></span>
                 <button id="manual-refresh" class="btn btn-sm btn-outline-light ms-2">
-                    <i class="bi bi-arrow-clockwise"></i> Refresh
+                    Refresh
                 </button>
             </span>
         </div>
     </nav>
 
     <div class="container-fluid mt-3">
-        <div class="row">
-            <!-- Left column with filters -->
-            <div class="col-md-2">
-                <div class="card">
-                    <div class="card-header">
-                        <i class="bi bi-funnel"></i> Filters
-                    </div>
-                    <div class="card-body">
-                        <div class="mb-3">
-                            <label class="form-label">Region</label>
-                            <select id="region-filter" class="form-select form-select-sm">
-                                <option value="all">All Regions</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Node Type</label>
-                            <select id="nodetype-filter" class="form-select form-select-sm">
-                                <option value="all">All Types</option>
-                            </select>
-                        </div>
-                        <div class="mb-3">
-                            <label class="form-label">Status</label>
-                            <select id="status-filter" class="form-select form-select-sm">
-                                <option value="all">All Status</option>
-                                <option value="healthy">Healthy</option>
-                                <option value="warning">Warning</option>
-                                <option value="critical">Critical</option>
-                            </select>
-                        </div>
-                        <button id="apply-filters" class="btn btn-sm btn-primary">Apply</button>
-                    </div>
+        <div class="card mb-3">
+            <div class="card-header d-flex justify-content-between align-items-center">
+                <span>Network Performance Data</span>
+                <span>
+                    <select id="status-filter" class="form-select form-select-sm d-inline-block" style="width: auto;">
+                        <option value="all" selected>All Nodes</option>
+                        <option value="critical">Critical Only</option>
+                        <option value="warning">Warning Only</option>
+                        <option value="healthy">Healthy Only</option>
+                    </select>
+                </span>
+            </div>
+            <div class="card-body p-0">
+                <div class="table-responsive">
+                    <table class="table table-striped table-hover table-sm">
+                        <thead>
+                            <tr>
+                                <th>Node ID</th>
+                                <th>Node Name</th>
+                                <th>Type</th>
+                                <th>Region</th>
+                                <th>Status</th>
+                                <th>Timestamp</th>
+                                <th>Temperature (°C)</th>
+                                <th>CPU (%)</th>
+                                <th>Memory (%)</th>
+                                <th>Availability (%)</th>
+                                <th>Bandwidth (Mbps)</th>
+                                <th>Utilization (%)</th>
+                                <th>Errors</th>
+                            </tr>
+                        </thead>
+                        <tbody id="data-table-body">
+                            <!-- Table rows will be dynamically inserted here -->
+                        </tbody>
+                    </table>
                 </div>
-
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <i class="bi bi-info-circle"></i> Network Status
-                    </div>
+            </div>
+        </div>
+        
+        <div class="row">
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header">Network Status Summary</div>
                     <div class="card-body">
                         <div class="d-flex justify-content-between mb-2">
                             <span>Healthy Nodes</span>
@@ -114,140 +84,23 @@
                             <span>Critical Nodes</span>
                             <span id="critical-count" class="badge bg-danger">0</span>
                         </div>
-                        <div class="progress mt-2">
-                            <div id="health-progress-good" class="progress-bar bg-success" style="width: 70%"></div>
-                            <div id="health-progress-warning" class="progress-bar bg-warning" style="width: 20%"></div>
-                            <div id="health-progress-critical" class="progress-bar bg-danger" style="width: 10%"></div>
-                        </div>
                     </div>
                 </div>
             </div>
-
-            <!-- Main content -->
-            <div class="col-md-7">
-                <div class="row mb-3">
-                    <!-- Key metrics -->
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <div class="metric-label">Average Temperature</div>
-                                <div class="metric-value" id="avg-temp">32.5°C</div>
-                                <div class="small-chart" id="temp-trend-chart"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <div class="metric-label">CPU Utilization</div>
-                                <div class="metric-value" id="avg-cpu">42.7%</div>
-                                <div class="small-chart" id="cpu-trend-chart"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <div class="metric-label">Network Availability</div>
-                                <div class="metric-value" id="availability">99.92%</div>
-                                <div class="small-chart" id="availability-trend-chart"></div>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="col-md-3">
-                        <div class="card h-100">
-                            <div class="card-body text-center">
-                                <div class="metric-label">Active Alerts</div>
-                                <div class="metric-value" id="alert-count">3</div>
-                                <div class="d-flex justify-content-center mt-2">
-                                    <span class="badge bg-danger me-1">1 Critical</span>
-                                    <span class="badge bg-warning text-dark">2 Warning</span>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Network node map -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-geo-alt"></i> Network Map
-                    </div>
-                    <div class="card-body">
-                        <div id="network-map" style="height: 350px;"></div>
-                    </div>
-                </div>
-
-                <!-- Temperature monitoring -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-thermometer-half"></i> Temperature Monitoring
-                        <div class="float-end">
-                            <select id="temp-view-selector" class="form-select form-select-sm d-inline-block" style="width: auto;">
-                                <option value="all">All Nodes</option>
-                                <option value="warning">Warning Nodes</option>
-                                <option value="critical">Critical Nodes</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="temperature-chart" style="height: 300px;"></div>
-                    </div>
-                </div>
-
-                <!-- Utilization chart -->
-                <div class="card mb-3">
-                    <div class="card-header">
-                        <i class="bi bi-speedometer2"></i> Resource Utilization
-                        <div class="float-end">
-                            <select id="utilization-metric" class="form-select form-select-sm d-inline-block" style="width: auto;">
-                                <option value="cpu">CPU</option>
-                                <option value="memory">Memory</option>
-                                <option value="network">Network</option>
-                            </select>
-                        </div>
-                    </div>
-                    <div class="card-body">
-                        <div id="utilization-chart" style="height: 300px;"></div>
-                    </div>
-                </div>
-            </div>
-
-            <!-- Right column -->
-            <div class="col-md-3">
-                <!-- Maintenance recommendations -->
+            <div class="col-md-8">
                 <div class="card">
-                    <div class="card-header bg-danger text-white">
-                        <i class="bi bi-exclamation-triangle"></i> Critical Issues
-                    </div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush" id="critical-issues">
-                            <!-- Will be populated dynamically -->
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Warning alerts -->
-                <div class="card mt-3">
-                    <div class="card-header bg-warning">
-                        <i class="bi bi-exclamation-circle"></i> Warning Alerts
-                    </div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush" id="warning-alerts">
-                            <!-- Will be populated dynamically -->
-                        </ul>
-                    </div>
-                </div>
-
-                <!-- Maintenance schedule -->
-                <div class="card mt-3">
-                    <div class="card-header">
-                        <i class="bi bi-calendar-check"></i> Maintenance Schedule
-                    </div>
-                    <div class="card-body p-0">
-                        <ul class="list-group list-group-flush" id="maintenance-schedule">
-                            <!-- Will be populated dynamically -->
-                        </ul>
+                    <div class="card-header">Integration Instructions</div>
+                    <div class="card-body">
+                        <h5>Connecting to Strategy Mosaic</h5>
+                        <ol>
+                            <li>In Strategy Mosaic, create a new data source</li>
+                            <li>Select "Web Table" as the source type</li>
+                            <li>Enter this page's URL as the data source</li>
+                            <li>Select table by CSS selector: <code>table.table</code></li>
+                            <li>Configure refresh interval (recommended: 5 minutes)</li>
+                            <li>Map columns to your data model</li>
+                        </ol>
+                        <p class="text-muted">This page automatically refreshes data every 3 minutes to simulate a live data feed.</p>
                     </div>
                 </div>
             </div>
@@ -256,6 +109,310 @@
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/papaparse@5.3.0/papaparse.min.js"></script>
-    <script src="noc-dashboard.js"></script>
+    <script>
+        // Global variables
+        let nodesData = [];
+        let performanceData = [];
+        let refreshInterval = 180; // 3 minutes
+        let countdownTimer = refreshInterval;
+        let refreshIntervalId;
+        let temperatureThresholds = {
+            warning: 40,  // °C
+            critical: 50   // °C
+        };
+        let cpuThresholds = {
+            warning: 70,  // %
+            critical: 90   // %
+        };
+
+        // Initialize when the document is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // Load data files
+            Promise.all([
+                loadCSV('network_nodes_metadata.csv'),
+                loadCSV('network_performance_data.csv')
+            ]).then(([nodes, performance]) => {
+                nodesData = nodes;
+                performanceData = performance;
+                
+                // Convert timestamp strings to Date objects
+                performanceData.forEach(row => {
+                    row.timestamp = new Date(row.timestamp);
+                });
+                
+                // Initial update
+                updateTable();
+                
+                // Set up auto-refresh
+                startRefreshTimer();
+                
+                // Set up event listeners
+                document.getElementById('manual-refresh').addEventListener('click', manualRefresh);
+                document.getElementById('status-filter').addEventListener('change', updateTable);
+            }).catch(error => {
+                console.error('Error loading data:', error);
+                alert('Failed to load data files. Please check that CSV files are in the same directory.');
+            });
+            
+            // Update current time display
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+        });
+
+        // Load CSV using PapaParse
+        function loadCSV(filename) {
+            return new Promise((resolve, reject) => {
+                Papa.parse(filename, {
+                    download: true,
+                    header: true,
+                    dynamicTyping: true,
+                    complete: results => {
+                        resolve(results.data.filter(row => row.node_id)); // Filter out any empty rows
+                    },
+                    error: error => {
+                        reject(error);
+                    }
+                });
+            });
+        }
+
+        // Start refresh timer
+        function startRefreshTimer() {
+            countdownTimer = refreshInterval;
+            updateCountdown();
+            
+            if (refreshIntervalId) {
+                clearInterval(refreshIntervalId);
+            }
+            
+            refreshIntervalId = setInterval(() => {
+                countdownTimer--;
+                updateCountdown();
+                
+                if (countdownTimer <= 0) {
+                    updateTable();
+                    countdownTimer = refreshInterval;
+                }
+            }, 1000);
+        }
+
+        // Update countdown display
+        function updateCountdown() {
+            const minutes = Math.floor(countdownTimer / 60);
+            const seconds = countdownTimer % 60;
+            document.getElementById('refresh-countdown').textContent = 
+                `Auto-refresh in ${minutes}:${seconds.toString().padStart(2, '0')}`;
+        }
+
+        // Manual refresh handler
+        function manualRefresh() {
+            updateTable();
+            countdownTimer = refreshInterval;
+        }
+
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = 
+                now.toLocaleDateString() + ' ' + now.toLocaleTimeString();
+        }
+
+        // Generate current performance data by simulating "live" updates
+        function generateCurrentPerformanceData() {
+            // Ensure we generate data for ALL nodes
+            const currentData = [];
+            
+            // Process each node in our node metadata
+            nodesData.forEach(node => {
+                // Find a base sample from our historical data for this node type
+                const nodeTypeData = performanceData.filter(row => {
+                    const matchingNode = nodesData.find(n => n.node_id === row.node_id);
+                    return matchingNode && matchingNode.node_type === node.node_type;
+                });
+                
+                // Take a random sample as our base, or create defaults if none found
+                let baseValues;
+                if (nodeTypeData.length > 0) {
+                    baseValues = nodeTypeData[Math.floor(Math.random() * nodeTypeData.length)];
+                } else {
+                    // Default values by node type
+                    const defaults = {
+                        'Cell Tower 4G': { temp: 35, cpu: 45, memory: 40 },
+                        'Cell Tower 5G': { temp: 38, cpu: 55, memory: 45 },
+                        'Fiber Node': { temp: 30, cpu: 35, memory: 30 },
+                        'Cable Node': { temp: 32, cpu: 40, memory: 35 },
+                        'Data Center Router': { temp: 40, cpu: 60, memory: 50 }
+                    };
+                    
+                    const typeDefaults = defaults[node.node_type] || { temp: 30, cpu: 40, memory: 35 };
+                    
+                    baseValues = {
+                        temperature_celsius: typeDefaults.temp,
+                        cpu_utilization_percent: typeDefaults.cpu,
+                        memory_utilization_percent: typeDefaults.memory,
+                        availability_percent: 99.5,
+                        download_bandwidth_mbps: 200,
+                        upload_bandwidth_mbps: 100,
+                        throughput_utilization_percent: 40,
+                        error_rate_percent: 0.1
+                    };
+                }
+                
+                // Create new row with current timestamp
+                const newRow = {
+                    node_id: node.node_id,
+                    timestamp: new Date(),
+                    
+                    // Add variation to make data realistic
+                    temperature_celsius: addVariation(baseValues.temperature_celsius || 30, 5),
+                    cpu_utilization_percent: addVariation(baseValues.cpu_utilization_percent || 40, 10),
+                    memory_utilization_percent: addVariation(baseValues.memory_utilization_percent || 35, 5),
+                    availability_percent: addVariation(baseValues.availability_percent || 99.5, 1),
+                    download_bandwidth_mbps: addVariation(baseValues.download_bandwidth_mbps || 200, 20),
+                    upload_bandwidth_mbps: addVariation(baseValues.upload_bandwidth_mbps || 100, 10),
+                    throughput_utilization_percent: addVariation(baseValues.throughput_utilization_percent || 40, 10),
+                    error_rate_percent: addVariation(baseValues.error_rate_percent || 0.1, 0.05)
+                };
+                
+                // Occasionally add anomalies to make the data interesting
+                if (Math.random() < 0.08) { // 8% chance of an anomaly
+                    const anomalyType = Math.floor(Math.random() * 3);
+                    switch (anomalyType) {
+                        case 0:
+                            // Temperature spike
+                            newRow.temperature_celsius += Math.random() * 25;
+                            break;
+                        case 1:
+                            // CPU spike
+                            newRow.cpu_utilization_percent += Math.random() * 35;
+                            newRow.cpu_utilization_percent = Math.min(newRow.cpu_utilization_percent, 100);
+                            break;
+                        case 2:
+                            // Availability issue
+                            newRow.availability_percent -= Math.random() * 5;
+                            newRow.error_rate_percent += Math.random() * 2;
+                            break;
+                    }
+                }
+                
+                currentData.push(newRow);
+            });
+            
+            return currentData;
+        }
+
+        // Add random variation to a value
+        function addVariation(value, maxVariation) {
+            const variation = (Math.random() * 2 - 1) * maxVariation;
+            return Math.max(0, value + variation);
+        }
+
+        // Get node status based on performance metrics
+        function getNodeStatus(node, perf) {
+            if (!perf) return 'unknown';
+            
+            // Check for critical conditions
+            if (perf.temperature_celsius > temperatureThresholds.critical ||
+                perf.cpu_utilization_percent > cpuThresholds.critical ||
+                perf.availability_percent < 95) {
+                return 'critical';
+            }
+            
+            // Check for warning conditions
+            if (perf.temperature_celsius > temperatureThresholds.warning ||
+                perf.cpu_utilization_percent > cpuThresholds.warning ||
+                perf.availability_percent < 98) {
+                return 'warning';
+            }
+            
+            return 'healthy';
+        }
+
+        // Update the data table
+        function updateTable() {
+            // Generate current performance data
+            const currentPerformance = generateCurrentPerformanceData();
+            
+            // Combine node metadata with performance data
+            let combinedData = nodesData.map(node => {
+                const perf = currentPerformance.find(p => p.node_id === node.node_id);
+                const status = getNodeStatus(node, perf);
+                return {
+                    ...node,
+                    ...perf,
+                    status: status
+                };
+            });
+            
+            // Apply status filter if selected
+            const statusFilter = document.getElementById('status-filter').value;
+            if (statusFilter !== 'all') {
+                combinedData = combinedData.filter(node => node.status === statusFilter);
+            }
+            
+            // Update table
+            const tableBody = document.getElementById('data-table-body');
+            tableBody.innerHTML = '';
+            
+            combinedData.forEach(node => {
+                const row = document.createElement('tr');
+                
+                // Apply color based on status
+                if (node.status === 'critical') {
+                    row.className = 'status-critical';
+                } else if (node.status === 'warning') {
+                    row.className = 'status-warning';
+                } else if (node.status === 'healthy') {
+                    row.className = 'status-healthy';
+                }
+                
+                // Format timestamp
+                const timestamp = node.timestamp ? 
+                    node.timestamp.toLocaleString() : 
+                    new Date().toLocaleString();
+                
+                // Create row content
+                row.innerHTML = `
+                    <td>${node.node_id}</td>
+                    <td>${node.node_name}</td>
+                    <td>${node.node_type}</td>
+                    <td>${node.region}</td>
+                    <td>
+                        <span class="badge ${
+                            node.status === 'critical' ? 'bg-danger' :
+                            node.status === 'warning' ? 'bg-warning text-dark' :
+                            'bg-success'
+                        }">
+                            ${node.status.charAt(0).toUpperCase() + node.status.slice(1)}
+                        </span>
+                    </td>
+                    <td>${timestamp}</td>
+                    <td>${node.temperature_celsius ? node.temperature_celsius.toFixed(1) : 'N/A'}</td>
+                    <td>${node.cpu_utilization_percent ? node.cpu_utilization_percent.toFixed(1) : 'N/A'}</td>
+                    <td>${node.memory_utilization_percent ? node.memory_utilization_percent.toFixed(1) : 'N/A'}</td>
+                    <td>${node.availability_percent ? node.availability_percent.toFixed(2) : 'N/A'}</td>
+                    <td>${node.download_bandwidth_mbps ? node.download_bandwidth_mbps.toFixed(1) : 'N/A'}</td>
+                    <td>${node.throughput_utilization_percent ? node.throughput_utilization_percent.toFixed(1) : 'N/A'}</td>
+                    <td>${node.error_rate_percent ? node.error_rate_percent.toFixed(3) : 'N/A'}</td>
+                `;
+                
+                tableBody.appendChild(row);
+            });
+            
+            // Update status counts
+            updateStatusCounts(combinedData);
+        }
+
+        // Update status counts
+        function updateStatusCounts(nodes) {
+            const healthyCounts = nodes.filter(node => node.status === 'healthy').length;
+            const warningCounts = nodes.filter(node => node.status === 'warning').length;
+            const criticalCounts = nodes.filter(node => node.status === 'critical').length;
+            
+            document.getElementById('healthy-count').textContent = healthyCounts;
+            document.getElementById('warning-count').textContent = warningCounts;
+            document.getElementById('critical-count').textContent = criticalCounts;
+        }
+    </script>
 </body>
 </html>
